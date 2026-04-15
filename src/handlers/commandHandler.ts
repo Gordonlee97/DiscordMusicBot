@@ -16,10 +16,10 @@ export async function loadCommands(client: Client): Promise<void> {
 }
 
 export async function registerCommands(client: Client): Promise<void> {
-  const rest = new REST().setToken(process.env.DISCORD_TOKEN!);
+  const rest = new REST().setToken(process.env['DISCORD_TOKEN']!);
   const body = [...client.commands.values()].map(c => c.data.toJSON());
-  const clientId = process.env.CLIENT_ID!;
-  const guildId = process.env.GUILD_ID;
+  const clientId = process.env['CLIENT_ID']!;
+  const guildId = process.env['GUILD_ID'];
 
   if (guildId) {
     await rest.put(Routes.applicationGuildCommands(clientId, guildId), { body });

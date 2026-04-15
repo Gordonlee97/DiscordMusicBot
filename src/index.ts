@@ -18,16 +18,15 @@ const client = new Client({
   ],
 });
 
-const ytdlpPluginOptions: Record<string, unknown> = { update: false };
-if (process.env['COOKIES_FROM_BROWSER']) {
-  ytdlpPluginOptions['ytdlpArgs'] = ['--cookies-from-browser', process.env['COOKIES_FROM_BROWSER']];
-}
-
+// Note: @distube/yt-dlp v1.x only accepts { update } — ytdlpArgs is not supported.
+// To bypass YouTube "sign in to confirm" blocks, place a yt-dlp.conf file in the
+// yt-dlp config directory (see: https://github.com/yt-dlp/yt-dlp#configuration)
+// with: --cookies-from-browser chrome
 const distube = new DisTube(client, {
   leaveOnEmpty: true,
   leaveOnFinish: false,
   leaveOnStop: false,
-  plugins: [new YtDlpPlugin(ytdlpPluginOptions), new SpotifyPlugin()],
+  plugins: [new YtDlpPlugin({ update: false }), new SpotifyPlugin()],
 });
 
 client.distube = distube;

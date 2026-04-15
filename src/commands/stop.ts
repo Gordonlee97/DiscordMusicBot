@@ -13,6 +13,11 @@ export async function execute(interaction: ChatInputCommandInteraction, distube:
     return;
   }
 
+  if (queue.paused) {
+    await interaction.reply({ embeds: [embeds.stopped()] });
+    return;
+  }
+
   try {
     await distube.pause(interaction.guildId!);
     await interaction.reply({ embeds: [embeds.stopped()] });

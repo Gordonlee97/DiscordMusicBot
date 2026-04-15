@@ -14,8 +14,8 @@ export const data = new SlashCommandBuilder()
 
 export async function execute(interaction: ChatInputCommandInteraction, distube: DisTube): Promise<void> {
   const queue = distube.getQueue(interaction.guildId!);
-  if (!queue || queue.songs.length < 2) {
-    await interaction.reply({ embeds: [embeds.error('Not enough tracks in the queue.')], ephemeral: true });
+  if (!queue || queue.songs.length < 3) {
+    await interaction.reply({ embeds: [embeds.error('You need at least 2 queued tracks to reorder.')], ephemeral: true });
     return;
   }
 

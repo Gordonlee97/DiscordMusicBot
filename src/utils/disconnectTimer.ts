@@ -1,3 +1,7 @@
+// Single-guild assumption: this module holds one timer shared across all guilds.
+// For a personal/single-server bot this is fine. If the bot is ever invited to
+// multiple servers, replace with a Map<string, ReturnType<typeof setTimeout>>
+// keyed by guild ID.
 let timer: ReturnType<typeof setTimeout> | null = null;
 
 /** Starts the disconnect countdown. Cancels any existing timer first. */

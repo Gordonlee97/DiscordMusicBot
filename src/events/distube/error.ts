@@ -3,6 +3,7 @@ import { embeds } from '../../utils/embeds';
 
 export const name = 'error';
 
+// DisTube v4 error event emits a guild TextChannel — not the broader TextBasedChannel.
 export async function execute(channel: TextChannel | null, error: Error): Promise<void> {
   console.error('[DisTube Error]', error.message);
 

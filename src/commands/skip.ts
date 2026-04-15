@@ -13,6 +13,11 @@ export async function execute(interaction: ChatInputCommandInteraction, distube:
     return;
   }
 
+  if (queue.songs.length <= 1) {
+    await interaction.reply({ embeds: [embeds.error('No next track to skip to.')], ephemeral: true });
+    return;
+  }
+
   try {
     await distube.skip(interaction.guildId!);
     await interaction.reply({ embeds: [embeds.skipped()] });
