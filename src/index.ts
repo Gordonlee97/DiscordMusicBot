@@ -27,8 +27,7 @@ const distube = new DisTube(client, {
   leaveOnEmpty: true,
   leaveOnFinish: false,
   leaveOnStop: false,
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  plugins: [new YtDlpPlugin(ytdlpPluginOptions), new SpotifyPlugin()] as any,
+  plugins: [new YtDlpPlugin(ytdlpPluginOptions), new SpotifyPlugin()],
 });
 
 client.distube = distube;
