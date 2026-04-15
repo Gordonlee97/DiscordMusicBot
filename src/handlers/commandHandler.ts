@@ -1,5 +1,6 @@
 import { readdirSync } from 'fs';
 import { join } from 'path';
+import { pathToFileURL } from 'url';
 import { Collection, REST, Routes, Client } from 'discord.js';
 import type { Command } from '../types';
 
@@ -8,7 +9,7 @@ export async function loadCommands(client: Client): Promise<void> {
   const commandsPath = join(__dirname, '..', 'commands');
 
   for (const file of readdirSync(commandsPath).filter(f => f.endsWith('.js') || f.endsWith('.ts'))) {
-    const command: Command = await import(join(commandsPath, file));
+    const command: Command = await import(pathToFileURL(join(commandsPath, file)).href);
     client.commands.set(command.data.name, command);
   }
 
