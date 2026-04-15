@@ -95,10 +95,10 @@ Identical to `/play` except DisTube is called with `position: 1` to insert the t
 | Event | Handler | Action |
 |---|---|---|
 | `playSong` | `events/distube/playSong.ts` | Send "Now Playing" embed (single track) |
-| `addSong` | `events/distube/addSong.ts` | Send "Added to Queue" embed with queue position |
+| `addSong` | `events/distube/addSong.ts` | Send "Added to Queue" embed with queue position; cancel disconnect timer if running |
 | `playList` | `events/distube/playList.ts` | Send "Now Playing" embed showing playlist name + first track |
-| `addList` | `events/distube/addList.ts` | Send "Playlist Added" embed with name and track count |
-| `finish` | `events/distube/finish.ts` | Send "Queue finished" embed; bot auto-leaves voice channel |
+| `addList` | `events/distube/addList.ts` | Send "Playlist Added" embed with name and track count; cancel disconnect timer if running |
+| `finish` | `events/distube/finish.ts` | Send "Queue finished" embed; start 10-minute disconnect timer |
 | `disconnect` | `events/distube/disconnect.ts` | Silent cleanup |
 | `error` | `events/distube/error.ts` | Send error embed to text channel; never crash the process |
 
@@ -151,10 +151,12 @@ COOKIES_FROM_BROWSER=chrome  # passed to YtDlpPlugin to bypass YouTube sign-in b
 
 DisTube is configured with:
 - `leaveOnEmpty: true` — bot auto-disconnects when the voice channel has no human members
-- `leaveOnFinish: true` — bot auto-disconnects when the queue is fully exhausted
+- `leaveOnFinish: false` — handled manually (see below)
 - `leaveOnStop: false` — `/stop` pauses playback but keeps the bot in the channel (queue intact, user can `/resume` or `/play` again)
 
-This means the bot naturally cleans itself up without needing a `/leave` command.
+**Queue-finish buffer:** When the `finish` event fires, the bot sends a "Queue finished" embed and starts a 10-minute countdown before disconnecting. If any new song is added (`addSong` / `addList`) before the timer expires, the timer is cancelled and the bot stays. If the timer fires, the bot disconnects. This gives users time to queue more songs without the bot abruptly leaving.
+
+The active disconnect timer is stored as a module-level variable in `events/distube/finish.ts` and cleared in `events/distube/addSong.ts` and `events/distube/addList.ts`.
 
 ---
 
