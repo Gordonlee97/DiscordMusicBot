@@ -1,12 +1,14 @@
 import type { Queue } from 'distube';
 import { embeds } from '../../utils/embeds';
 import { setDisconnectTimer } from '../../utils/disconnectTimer';
+import { stopTracker } from '../../utils/nowPlayingTracker';
 
 export const name = 'finish';
 
 const TEN_MINUTES = 10 * 60 * 1000;
 
 export async function execute(queue: Queue): Promise<void> {
+  stopTracker(queue.id);
   await queue.textChannel?.send({ embeds: [embeds.queueFinished()] });
 
   setDisconnectTimer(() => {

@@ -1,6 +1,13 @@
 import { ExtractorPlugin, Song, Playlist, ResolveOptions } from 'distube';
 import { json } from '@distube/yt-dlp';
 
+export interface SearchResult {
+  title: string;
+  url: string;
+  duration: number;
+  uploader: string;
+}
+
 /**
  * ExtractorPlugin (type "extractor") that handles plain-text search queries.
  *
@@ -57,6 +64,34 @@ export class YtDlpSearchPlugin extends ExtractorPlugin {
 
   getRelatedSongs(): never[] {
     return [];
+  }
+
+  /**
+   * Searches YouTube for multiple results without full extraction.
+   * Uses --flat-playlist so yt-dlp returns metadata only (fast — no per-video requests).
+   */
+  async searchMultiple(query: string, count = 5): Promise<SearchResult[]> {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const result: any = await json(`ytsearch${count}:${query}`, {
+      dumpSingleJson: true,
+      noWarnings: true,
+      flatPlaylist: true,
+      skipDownload: true,
+      simulate: true,
+    }).catch(() => null);
+
+    if (!result?.entries) return [];
+
+    return result.entries
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      .filter((e: any) => e?.webpage_url || e?.url)
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      .map((e: any): SearchResult => ({
+        title: e.title || 'Unknown',
+        url: e.webpage_url || e.url,
+        duration: typeof e.duration === 'number' ? e.duration : 0,
+        uploader: e.uploader || e.channel || 'Unknown',
+      }));
   }
 
   async getStreamURL<T>(song: Song<T>): Promise<string> {
