@@ -1,6 +1,4 @@
 import 'dotenv/config';
-import { execSync } from 'child_process';
-import { dirname, basename } from 'path';
 import { Client, GatewayIntentBits } from 'discord.js';
 import { DisTube } from 'distube';
 import { YtDlpPlugin } from '@distube/yt-dlp';
@@ -20,21 +18,16 @@ const client = new Client({
   ],
 });
 
-// Point @distube/yt-dlp at the system yt-dlp (installed via winget).
-// The plugin uses YTDLP_DIR + YTDLP_FILENAME to build its binary path.
-// update: false prevents the plugin from downloading/overwriting the system binary.
+// update: true — plugin downloads/caches its own yt-dlp binary on first run
+// and keeps it updated on subsequent startups.
 // Note: v1.x only accepts { update } — ytdlpArgs is not supported.
 // To bypass YouTube "sign in to confirm" blocks, place a yt-dlp.conf file in the
 // yt-dlp config directory (see: https://github.com/yt-dlp/yt-dlp#configuration).
-const ytdlpSystemPath = execSync('where yt-dlp', { encoding: 'utf8' }).trim().split('\n')[0].trim();
-process.env['YTDLP_DIR'] = dirname(ytdlpSystemPath);
-process.env['YTDLP_FILENAME'] = basename(ytdlpSystemPath);
-
 const distube = new DisTube(client, {
   leaveOnEmpty: true,
   leaveOnFinish: false,
   leaveOnStop: false,
-  plugins: [new YtDlpPlugin({ update: false }), new SpotifyPlugin()],
+  plugins: [new YtDlpPlugin({ update: true }), new SpotifyPlugin()],
 });
 
 client.distube = distube;
