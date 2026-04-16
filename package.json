@@ -16,7 +16,9 @@
     "discord.js": "^14.16.0",
     "distube": "^4.2.0",
     "dotenv": "^16.4.0",
-    "ffmpeg-static": "^5.2.0"
+    "ffmpeg-static": "^5.2.0",
+    "libsodium-wrappers": "^0.8.3",
+    "opusscript": "^0.0.8"
   },
   "devDependencies": {
     "@types/jest": "^29.5.0",
