@@ -1,4 +1,4 @@
-import { SlashCommandBuilder, ChatInputCommandInteraction, GuildMember, TextChannel } from 'discord.js';
+import { SlashCommandBuilder, ChatInputCommandInteraction, GuildMember, TextChannel, MessageFlags } from 'discord.js';
 import type { DisTube } from 'distube';
 import { embeds } from '../utils/embeds';
 
@@ -16,12 +16,12 @@ export async function execute(interaction: ChatInputCommandInteraction, distube:
   const voiceChannel = member.voice.channel;
 
   if (!voiceChannel) {
-    await interaction.reply({ embeds: [embeds.error('You need to be in a voice channel first.')], ephemeral: true });
+    await interaction.reply({ embeds: [embeds.error('You need to be in a voice channel first.')], flags: MessageFlags.Ephemeral });
     return;
   }
 
   const query = interaction.options.getString('query', true);
-  await interaction.deferReply({ ephemeral: true });
+  await interaction.deferReply({ flags: MessageFlags.Ephemeral });
 
   try {
     await distube.play(voiceChannel, query, {
@@ -30,6 +30,7 @@ export async function execute(interaction: ChatInputCommandInteraction, distube:
     });
     await interaction.deleteReply();
   } catch (error) {
+    console.error('[Play Error]', error);
     const message = error instanceof Error ? error.message : 'Something went wrong.';
     const isYouTubeBlock = message.toLowerCase().includes('sign in to confirm');
     await interaction.editReply({

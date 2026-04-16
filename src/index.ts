@@ -3,6 +3,7 @@ import { Client, GatewayIntentBits } from 'discord.js';
 import { DisTube } from 'distube';
 import { YtDlpPlugin } from '@distube/yt-dlp';
 import { SpotifyPlugin } from '@distube/spotify';
+import { YtDlpSearchPlugin } from './plugins/YtDlpSearchPlugin';
 import { loadCommands, registerCommands } from './handlers/commandHandler';
 import { loadEvents } from './handlers/eventHandler';
 
@@ -20,14 +21,15 @@ const client = new Client({
 
 // update: true — plugin downloads/caches its own yt-dlp binary on first run
 // and keeps it updated on subsequent startups.
-// Note: v1.x only accepts { update } — ytdlpArgs is not supported.
-// To bypass YouTube "sign in to confirm" blocks, place a yt-dlp.conf file in the
-// yt-dlp config directory (see: https://github.com/yt-dlp/yt-dlp#configuration).
 const distube = new DisTube(client, {
-  leaveOnEmpty: true,
-  leaveOnFinish: false,
-  leaveOnStop: false,
-  plugins: [new YtDlpPlugin({ update: true }), new SpotifyPlugin()],
+  // emitAddListWhenCreatingQueue: false — suppress addList on first play;
+  // the playSong event already announces the now-playing track.
+  emitAddListWhenCreatingQueue: false,
+  // Plugin order matters for URL resolution (first validate() wins).
+  // SpotifyPlugin handles Spotify URLs → creates search queries → YtDlpSearchPlugin plays them.
+  // YtDlpSearchPlugin handles text search via ytsearch1:.
+  // YtDlpPlugin must be last (it warns if it isn't); handles all remaining URLs.
+  plugins: [new SpotifyPlugin(), new YtDlpSearchPlugin(), new YtDlpPlugin({ update: true })],
 });
 
 client.distube = distube;

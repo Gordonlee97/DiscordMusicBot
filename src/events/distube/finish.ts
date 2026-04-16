@@ -11,7 +11,7 @@ export async function execute(queue: Queue): Promise<void> {
 
   setDisconnectTimer(() => {
     try {
-      queue.distube.voices.get(queue.id)?.leave();
+      queue.voice.leave();
     } catch {
       // Voice connection already cleaned up — ignore
     }

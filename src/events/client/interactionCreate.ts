@@ -1,4 +1,4 @@
-import { Interaction } from 'discord.js';
+import { Interaction, MessageFlags } from 'discord.js';
 import { embeds } from '../../utils/embeds';
 
 export const name = 'interactionCreate';
@@ -9,7 +9,7 @@ export async function execute(interaction: Interaction): Promise<void> {
 
   const command = interaction.client.commands.get(interaction.commandName);
   if (!command) {
-    await interaction.reply({ embeds: [embeds.error(`Unknown command: ${interaction.commandName}`)], ephemeral: true });
+    await interaction.reply({ embeds: [embeds.error(`Unknown command: ${interaction.commandName}`)], flags: MessageFlags.Ephemeral });
     return;
   }
 
@@ -21,7 +21,7 @@ export async function execute(interaction: Interaction): Promise<void> {
     if (interaction.deferred || interaction.replied) {
       await interaction.editReply({ embeds: [embeds.error(message)] });
     } else {
-      await interaction.reply({ embeds: [embeds.error(message)], ephemeral: true });
+      await interaction.reply({ embeds: [embeds.error(message)], flags: MessageFlags.Ephemeral });
     }
   }
 }

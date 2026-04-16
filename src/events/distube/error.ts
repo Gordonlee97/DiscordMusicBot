@@ -1,10 +1,10 @@
-import type { TextChannel } from 'discord.js';
+import type { Queue, Song } from 'distube';
 import { embeds } from '../../utils/embeds';
 
 export const name = 'error';
 
-// DisTube v4 error event emits a guild TextChannel — not the broader TextBasedChannel.
-export async function execute(channel: TextChannel | null, error: Error): Promise<void> {
+// DisTube v5 error event: (error, queue, song?)
+export async function execute(error: Error, queue: Queue, _song?: Song): Promise<void> {
   console.error('[DisTube Error]', error.message);
 
   const isYouTubeBlock = error.message.toLowerCase().includes('sign in to confirm');
@@ -12,5 +12,5 @@ export async function execute(channel: TextChannel | null, error: Error): Promis
     ? 'YouTube is blocking this request. Try again in a moment.'
     : `An error occurred: ${error.message}`;
 
-  await channel?.send({ embeds: [embeds.error(userMessage)] });
+  await queue.textChannel?.send({ embeds: [embeds.error(userMessage)] });
 }

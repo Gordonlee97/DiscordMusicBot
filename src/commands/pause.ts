@@ -1,4 +1,4 @@
-import { SlashCommandBuilder, ChatInputCommandInteraction } from 'discord.js';
+import { SlashCommandBuilder, ChatInputCommandInteraction, MessageFlags } from 'discord.js';
 import type { DisTube } from 'distube';
 import { embeds } from '../utils/embeds';
 
@@ -9,19 +9,19 @@ export const data = new SlashCommandBuilder()
 export async function execute(interaction: ChatInputCommandInteraction, distube: DisTube): Promise<void> {
   const queue = distube.getQueue(interaction.guildId!);
   if (!queue) {
-    await interaction.reply({ embeds: [embeds.error('Nothing is currently playing.')], ephemeral: true });
+    await interaction.reply({ embeds: [embeds.error('Nothing is currently playing.')], flags: MessageFlags.Ephemeral });
     return;
   }
   if (queue.paused) {
-    await interaction.reply({ embeds: [embeds.error('Playback is already paused. Use `/resume` to continue.')], ephemeral: true });
+    await interaction.reply({ embeds: [embeds.error('Playback is already paused. Use `/resume` to continue.')], flags: MessageFlags.Ephemeral });
     return;
   }
 
   try {
-    await distube.pause(interaction.guildId!);
+    queue.pause();
     await interaction.reply({ embeds: [embeds.paused()] });
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Could not pause.';
-    await interaction.reply({ embeds: [embeds.error(message)], ephemeral: true });
+    await interaction.reply({ embeds: [embeds.error(message)], flags: MessageFlags.Ephemeral });
   }
 }

@@ -1,4 +1,4 @@
-import { SlashCommandBuilder, ChatInputCommandInteraction } from 'discord.js';
+import { SlashCommandBuilder, ChatInputCommandInteraction, MessageFlags } from 'discord.js';
 import type { DisTube } from 'distube';
 import { embeds } from '../utils/embeds';
 
@@ -15,7 +15,7 @@ export const data = new SlashCommandBuilder()
 export async function execute(interaction: ChatInputCommandInteraction, distube: DisTube): Promise<void> {
   const queue = distube.getQueue(interaction.guildId!);
   if (!queue || queue.songs.length < 3) {
-    await interaction.reply({ embeds: [embeds.error('You need at least 2 queued tracks to reorder.')], ephemeral: true });
+    await interaction.reply({ embeds: [embeds.error('You need at least 2 queued tracks to reorder.')], flags: MessageFlags.Ephemeral });
     return;
   }
 
@@ -27,7 +27,7 @@ export async function execute(interaction: ChatInputCommandInteraction, distube:
   if (position > maxPosition) {
     await interaction.reply({
       embeds: [embeds.error(`Position must be between 2 and ${maxPosition}.`)],
-      ephemeral: true,
+      flags: MessageFlags.Ephemeral,
     });
     return;
   }

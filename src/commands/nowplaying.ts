@@ -1,4 +1,4 @@
-import { SlashCommandBuilder, ChatInputCommandInteraction } from 'discord.js';
+import { SlashCommandBuilder, ChatInputCommandInteraction, MessageFlags } from 'discord.js';
 import type { DisTube } from 'distube';
 import { embeds } from '../utils/embeds';
 
@@ -9,7 +9,7 @@ export const data = new SlashCommandBuilder()
 export async function execute(interaction: ChatInputCommandInteraction, distube: DisTube): Promise<void> {
   const queue = distube.getQueue(interaction.guildId!);
   if (!queue || !queue.songs[0]) {
-    await interaction.reply({ embeds: [embeds.error('Nothing is currently playing.')], ephemeral: true });
+    await interaction.reply({ embeds: [embeds.error('Nothing is currently playing.')], flags: MessageFlags.Ephemeral });
     return;
   }
 
