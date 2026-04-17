@@ -1,6 +1,7 @@
 import type { Message } from 'discord.js';
 import type { Queue, Song } from 'distube';
 import { embeds } from './embeds';
+import { createPlayerButtons } from './playerButtons';
 
 interface TrackerState {
   interval: ReturnType<typeof setInterval>;
@@ -30,7 +31,10 @@ export function startTracker(guildId: string, message: Message, queue: Queue, so
     if (queue.paused) return;
 
     try {
-      await message.edit({ embeds: [embeds.nowPlayingCommand(song, queue.currentTime)] });
+      await message.edit({
+        embeds: [embeds.nowPlayingCommand(song, queue.currentTime, queue.repeatMode)],
+        components: [createPlayerButtons(queue)],
+      });
     } catch {
       // Message was deleted or bot lost permissions — stop tracking
       stopTracker(guildId);

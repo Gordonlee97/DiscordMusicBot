@@ -28,7 +28,7 @@ Also requires `yt-dlp` binary on PATH: `winget install yt-dlp` or `pip install y
 
 - **Runtime:** Node.js + TypeScript (strict mode), CommonJS modules
 - **Discord:** discord.js v14, slash commands only (no prefix commands)
-- **Music:** DisTube v4, @distube/yt-dlp@^1.1.3, @distube/spotify@^1.6.1
+- **Music:** DisTube v5, @distube/yt-dlp@^2.x, @distube/spotify@^2.x
 - **Voice:** @discordjs/voice, @discordjs/opus, ffmpeg-static (bundled FFmpeg)
 - **Tests:** Jest + ts-jest (tests in `tests/`, sources in `src/`)
 
@@ -43,17 +43,23 @@ Also requires `yt-dlp` binary on PATH: `winget install yt-dlp` or `pip install y
 - `src/utils/embeds.ts` — ALL EmbedBuilder construction lives here; never build embeds inline
 - `src/utils/formatters.ts` — formatDuration(), progressBar()
 - `src/utils/disconnectTimer.ts` — module-level singleton disconnect timer (single-guild)
+- `src/utils/nowPlayingTracker.ts` — live now-playing embed updater (5s interval, keyed by guildId)
+- `src/utils/searchPicker.ts` — search result picker state (pending selections, 30s timeout)
+- `src/utils/playerButtons.ts` — builds the Pause/Resume/Skip/Stop button row for now-playing embeds
 
 ## Key Design Decisions
 
-- `/stop` calls `distube.pause()` internally — DisTube v4 has no stop-without-clear; queue is preserved
+- `/stop` calls `queue.pause()` — no stop-without-clear in DisTube; queue is preserved
 - `/clear` splices `queue.songs` from index 1; currently playing track stays at index 0
 - Queue indexing: `songs[0]` = current, `songs[1]` = next; display position N = `songs[N]`
 - `/next [position]` requires at least 2 queued tracks (songs.length ≥ 3), moves `songs[position]` to `songs[1]`
 - 10-minute disconnect buffer: `setDisconnectTimer` in `finish` event, cancelled in `addSong`/`addList`
-- Manual disconnect: `queue.distube.voices.get(queue.id)?.leave()`
+- Manual disconnect: `queue.voice.leave()`
 - Commands defer+delete ephemeral reply for async ops; DisTube events send actual channel embeds
-- Plugin versions: @distube/yt-dlp and @distube/spotify must stay on v1.x (v2.x requires DisTube v5)
+- Now-playing embed has live buttons (Pause/Resume/Skip/Stop); button interactions handled in `interactionCreate.ts`
+- Button `player:pause` toggles pause/resume; `player:skip` defers and lets playSong fire; `player:stop` pauses
+- `nowPlayingCommand(song, currentTime, repeatMode?)` — tracker passes `queue.repeatMode` so loop state shows live
+- DisTube v5 plugin split: `YtDlpSearchPlugin` (ExtractorPlugin) handles text search; `@distube/yt-dlp` handles URLs only
 
 ## Commands Reference
 
@@ -69,3 +75,6 @@ Also requires `yt-dlp` binary on PATH: `winget install yt-dlp` or `pip install y
 | `/next [position]` | Move queued track at position to play next |
 | `/queue` | Show the current queue |
 | `/nowplaying` | Show current track with progress bar |
+| `/loop` | Cycle loop mode: off → song → queue → off |
+| `/shuffle` | Shuffle the queue |
+| `/seek [time]` | Jump to position in current track (e.g. `1:30`, `90`) |

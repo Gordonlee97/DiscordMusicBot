@@ -93,17 +93,18 @@ export const embeds = {
       );
   },
 
-  /** Used by /nowplaying command — includes progress bar */
-  nowPlayingCommand(song: Song, currentTime: number): EmbedBuilder {
+  /** Used by /nowplaying command and live tracker — includes progress bar and optional repeat mode indicator */
+  nowPlayingCommand(song: Song, currentTime: number, repeatMode = 0): EmbedBuilder {
     const bar = progressBar(currentTime, song.duration ?? 0);
     const timeLabel = `${formatDuration(currentTime)} / ${song.formattedDuration ?? '—'}`;
+    const loopLine = repeatMode === 1 ? '\n🔂 Looping song' : repeatMode === 2 ? '\n🔁 Looping queue' : '';
     return new EmbedBuilder()
       .setColor(COLOR)
       .setAuthor({ name: '▶  Now Playing' })
       .setTitle(song.name ?? 'Unknown')
       .setURL(song.url ?? null)
       .setThumbnail(song.thumbnail ?? null)
-      .setDescription(`${bar}\n\`${timeLabel}\``)
+      .setDescription(`${bar}\n\`${timeLabel}\`${loopLine}`)
       .addFields({ name: 'Requested by', value: requesterName(song), inline: true });
   },
 
@@ -162,6 +163,36 @@ export const embeds = {
       .setAuthor({ name: '⏭  Playing Next' })
       .setTitle(song.name ?? 'Unknown')
       .setURL(song.url ?? null);
+  },
+
+  /** Used by /loop command */
+  looped(mode: 0 | 1 | 2): EmbedBuilder {
+    const labels: Record<0 | 1 | 2, string> = { 0: '➡️  Loop Off', 1: '🔂  Looping Song', 2: '🔁  Looping Queue' };
+    const descriptions: Record<0 | 1 | 2, string> = {
+      0: 'Loop disabled.',
+      1: 'Current song will repeat.',
+      2: 'Entire queue will repeat.',
+    };
+    return new EmbedBuilder()
+      .setColor(COLOR)
+      .setAuthor({ name: labels[mode] })
+      .setDescription(descriptions[mode]);
+  },
+
+  /** Used by /shuffle command */
+  shuffled(): EmbedBuilder {
+    return new EmbedBuilder()
+      .setColor(COLOR)
+      .setAuthor({ name: '🔀  Queue Shuffled' })
+      .setDescription('The queue has been shuffled.');
+  },
+
+  /** Used by /seek command */
+  seeked(timestamp: string): EmbedBuilder {
+    return new EmbedBuilder()
+      .setColor(COLOR)
+      .setAuthor({ name: '⏩  Seeked' })
+      .setDescription(`Jumped to \`${timestamp}\`.`);
   },
 
   /** Used for all error responses — always sent ephemeral */

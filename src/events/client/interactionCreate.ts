@@ -1,11 +1,57 @@
 import { Interaction, MessageFlags } from 'discord.js';
 import { embeds } from '../../utils/embeds';
 import { resolvePending } from '../../utils/searchPicker';
+import { createPlayerButtons } from '../../utils/playerButtons';
 
 export const name = 'interactionCreate';
 export const once = false;
 
 export async function execute(interaction: Interaction): Promise<void> {
+  // Handle playback button clicks
+  if (interaction.isButton() && interaction.customId.startsWith('player:')) {
+    const queue = interaction.client.distube.getQueue(interaction.guildId!);
+    if (!queue) {
+      await interaction.reply({ content: 'Nothing is currently playing.', flags: MessageFlags.Ephemeral });
+      return;
+    }
+
+    const action = interaction.customId.slice('player:'.length);
+
+    if (action === 'pause') {
+      if (queue.paused) {
+        queue.resume();
+      } else {
+        queue.pause();
+      }
+      await interaction.update({
+        embeds: [embeds.nowPlayingCommand(queue.songs[0], queue.currentTime, queue.repeatMode)],
+        components: [createPlayerButtons(queue)],
+      });
+      return;
+    }
+
+    if (action === 'skip') {
+      if (queue.songs.length <= 1) {
+        await interaction.reply({ content: 'No next track to skip to.', flags: MessageFlags.Ephemeral });
+        return;
+      }
+      await interaction.deferUpdate();
+      await queue.skip();
+      return;
+    }
+
+    if (action === 'stop') {
+      queue.pause();
+      await interaction.update({
+        embeds: [embeds.nowPlayingCommand(queue.songs[0], queue.currentTime, queue.repeatMode)],
+        components: [createPlayerButtons(queue)],
+      });
+      return;
+    }
+
+    return;
+  }
+
   // Handle search picker selections
   if (interaction.isStringSelectMenu() && interaction.customId.startsWith('search:')) {
     const userId = interaction.customId.slice('search:'.length);

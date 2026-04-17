@@ -1,13 +1,15 @@
 import type { Queue, Song } from 'distube';
 import { embeds } from '../../utils/embeds';
 import { startTracker } from '../../utils/nowPlayingTracker';
+import { createPlayerButtons } from '../../utils/playerButtons';
 
 export const name = 'playSong';
 
 export async function execute(queue: Queue, song: Song): Promise<void> {
-  // Send the live now-playing embed and start the auto-updating tracker
+  // Send the live now-playing embed with playback buttons and start the auto-updating tracker
   const message = await queue.textChannel?.send({
-    embeds: [embeds.nowPlayingCommand(song, queue.currentTime)],
+    embeds: [embeds.nowPlayingCommand(song, queue.currentTime, queue.repeatMode)],
+    components: [createPlayerButtons(queue)],
   });
   if (message) startTracker(queue.id, message, queue, song);
 
