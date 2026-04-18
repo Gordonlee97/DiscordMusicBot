@@ -72,21 +72,50 @@ export const embeds = {
     const current = songs[0];
     const queued = songs.slice(1);
 
-    const trackList = queued.length > 0
-      ? queued
-          .slice(0, 10)
-          .map((s, i) => `**${i + 1}.** [${s.name ?? 'Unknown'}](${s.url}) \`${s.formattedDuration ?? '—'}\``)
-          .join('\n')
-      : 'No tracks queued.';
+    const FIELD_LIMIT = 1024;
+    const OVERFLOW_RESERVE = 30; // chars reserved for the "...and N more" line
+    const NAME_MAX = 50;
+
+    let upNextValue: string;
+    if (queued.length === 0) {
+      upNextValue = 'No tracks queued.';
+    } else {
+      const candidate = queued.slice(0, 10);
+      const lines: string[] = [];
+
+      for (let i = 0; i < candidate.length; i++) {
+        const s = candidate[i];
+        const rawName = s.name ?? 'Unknown';
+        const name = rawName.length > NAME_MAX ? rawName.slice(0, NAME_MAX) + '…' : rawName;
+        const url = s.url ?? '';
+        const line = `**${i + 1}.** [${name}](${url}) \`${s.formattedDuration ?? '—'}\``;
+        lines.push(line);
+      }
+
+      // Trim lines from the bottom until the joined string + overflow fits within the field limit.
+      // lines.length === 1 is the safety floor — never drop the last entry.
+      while (lines.length > 1) {
+        const totalDropped = queued.length - lines.length;
+        const overflowLine = totalDropped > 0 ? `\n*...and ${totalDropped} more*` : '';
+        const joined = lines.join('\n') + overflowLine;
+        if (joined.length <= FIELD_LIMIT - OVERFLOW_RESERVE) break;
+        lines.pop();
+      }
+
+      // Build final value with accurate dropped count after trimming.
+      const finalDropped = queued.length - lines.length;
+      const finalOverflow = finalDropped > 0 ? `\n*...and ${finalDropped} more*` : '';
+      upNextValue = lines.join('\n') + finalOverflow;
+    }
 
     const totalSeconds = queued.reduce((acc, s) => acc + (s.duration ?? 0), 0);
-    const overflow = queued.length > 10 ? `\n*...and ${queued.length - 10} more*` : '';
+    const nowPlayingUrl = current?.url ?? '';
 
     return new EmbedBuilder()
       .setColor(COLOR)
       .setAuthor({ name: '🎵  Queue' })
-      .addFields({ name: 'Now Playing', value: `[${current?.name ?? 'Unknown'}](${current?.url})` })
-      .addFields({ name: 'Up Next', value: trackList + overflow })
+      .addFields({ name: 'Now Playing', value: `[${current?.name ?? 'Unknown'}](${nowPlayingUrl})` })
+      .addFields({ name: 'Up Next', value: upNextValue })
       .addFields(
         { name: 'Total in Queue', value: String(queued.length), inline: true },
         { name: 'Total Duration', value: formatDuration(totalSeconds), inline: true },
