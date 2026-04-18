@@ -20,7 +20,8 @@ export interface PendingSearch {
   interaction: ChatInputCommandInteraction;
 }
 
-// Module-level shared state — keyed by userId so each user has one pending search.
+// Keyed by interactionId — unique per command invocation, so multiple
+// concurrent pickers from the same user never overwrite each other.
 const pending = new Map<string, PendingSearch>();
 
 const SEARCH_TIMEOUT_MS = 30_000;
@@ -39,7 +40,7 @@ export function isUrl(str: string): boolean {
 /** Builds the Discord ActionRow containing the search result select menu. */
 export function createComponents(
   results: SearchResult[],
-  userId: string,
+  interactionId: string,
 ): ActionRowBuilder<StringSelectMenuBuilder> {
   const options = results.map(r =>
     new StringSelectMenuOptionBuilder()
@@ -49,46 +50,34 @@ export function createComponents(
   );
 
   const menu = new StringSelectMenuBuilder()
-    .setCustomId(`search:${userId}`)
+    .setCustomId(`search:${interactionId}`)
     .setPlaceholder('Choose a song...')
     .addOptions(options);
 
   return new ActionRowBuilder<StringSelectMenuBuilder>().addComponents(menu);
 }
 
-/** Registers a pending search for a user with a 30-second expiry. */
-export function registerPending(userId: string, entry: Omit<PendingSearch, 'timeout'>): void {
-  // Cancel any previous pending search for this user
-  cancelPending(userId);
-
-  const timeout = setTimeout(() => expirePending(userId, entry.interaction), SEARCH_TIMEOUT_MS);
-  pending.set(userId, { ...entry, timeout });
+/** Registers a pending search keyed by the originating interaction ID. */
+export function registerPending(interactionId: string, entry: Omit<PendingSearch, 'timeout'>): void {
+  const timeout = setTimeout(() => expirePending(interactionId, entry.interaction), SEARCH_TIMEOUT_MS);
+  pending.set(interactionId, { ...entry, timeout });
 }
 
 /**
  * Resolves a pending search (user made a selection).
  * Clears the timeout and removes from map. Returns the entry or undefined if expired.
  */
-export function resolvePending(userId: string): PendingSearch | undefined {
-  const entry = pending.get(userId);
+export function resolvePending(interactionId: string): PendingSearch | undefined {
+  const entry = pending.get(interactionId);
   if (!entry) return undefined;
   clearTimeout(entry.timeout);
-  pending.delete(userId);
+  pending.delete(interactionId);
   return entry;
 }
 
-/** Cancels a pending search without notifying the user (used when overwriting). */
-function cancelPending(userId: string): void {
-  const entry = pending.get(userId);
-  if (entry) {
-    clearTimeout(entry.timeout);
-    pending.delete(userId);
-  }
-}
-
 /** Called when the 30-second timeout fires — edits the reply to show expiry message. */
-async function expirePending(userId: string, interaction: ChatInputCommandInteraction): Promise<void> {
-  pending.delete(userId);
+async function expirePending(interactionId: string, interaction: ChatInputCommandInteraction): Promise<void> {
+  pending.delete(interactionId);
   try {
     await interaction.editReply({ content: 'Search timed out. Run the command again.', embeds: [], components: [] });
   } catch {

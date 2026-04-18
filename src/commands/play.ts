@@ -77,10 +77,10 @@ export async function execute(interaction: ChatInputCommandInteraction, distube:
 
   await interaction.editReply({
     embeds: [searchEmbed],
-    components: [createComponents(results, interaction.user.id)],
+    components: [createComponents(results, interaction.id)],
   });
 
-  registerPending(interaction.user.id, {
+  registerPending(interaction.id, {
     voiceChannel,
     textChannel: interaction.channel as TextChannel,
     member,

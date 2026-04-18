@@ -57,8 +57,8 @@ export async function execute(interaction: Interaction): Promise<void> {
 
   // Handle search picker selections
   if (interaction.isStringSelectMenu() && interaction.customId.startsWith('search:')) {
-    const userId = interaction.customId.slice('search:'.length);
-    const entry = resolvePending(userId);
+    const interactionId = interaction.customId.slice('search:'.length);
+    const entry = resolvePending(interactionId);
 
     if (!entry) {
       await interaction.reply({ content: 'This search has expired. Run the command again.', flags: MessageFlags.Ephemeral });
