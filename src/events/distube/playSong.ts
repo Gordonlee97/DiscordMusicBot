@@ -1,17 +1,27 @@
 import type { Queue, Song } from 'distube';
 import { embeds } from '../../utils/embeds';
-import { startTracker } from '../../utils/nowPlayingTracker';
+import { startTracker, getTrackerMessage } from '../../utils/nowPlayingTracker';
 import { createPlayerButtons } from '../../utils/playerButtons';
 
 export const name = 'playSong';
 
 export async function execute(queue: Queue, song: Song): Promise<void> {
-  // Send the live now-playing embed with playback buttons and start the auto-updating tracker
-  const message = await queue.textChannel?.send({
-    embeds: [embeds.nowPlayingCommand(song, queue.currentTime, queue.repeatMode)],
-    components: [createPlayerButtons(queue)],
-  });
-  if (message) startTracker(queue.id, message, queue, song);
+  // When looping a single song, reuse the existing now-playing message instead of
+  // sending a new one each loop — avoids flooding the channel with duplicate embeds.
+  const existingMessage = queue.repeatMode === 1 ? getTrackerMessage(queue.id) : undefined;
+  if (existingMessage) {
+    await existingMessage.edit({
+      embeds: [embeds.nowPlayingCommand(song, 0, queue.repeatMode)],
+      components: [createPlayerButtons(queue)],
+    }).catch(() => {});
+    startTracker(queue.id, existingMessage, queue, song);
+  } else {
+    const message = await queue.textChannel?.send({
+      embeds: [embeds.nowPlayingCommand(song, queue.currentTime, queue.repeatMode)],
+      components: [createPlayerButtons(queue)],
+    });
+    if (message) startTracker(queue.id, message, queue, song);
+  }
 
   // Pre-fetch the next song's stream URL in the background while this one plays.
   // DisTube checks song.stream.url before calling getStreamURL — if already set, it skips

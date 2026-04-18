@@ -44,6 +44,11 @@ export function startTracker(guildId: string, message: Message, queue: Queue, so
   trackers.set(guildId, { interval, message });
 }
 
+/** Returns the tracked message for a guild, if one exists. */
+export function getTrackerMessage(guildId: string): TrackerState['message'] | undefined {
+  return trackers.get(guildId)?.message;
+}
+
 /** Stops the live tracker for a guild, if one is running. */
 export function stopTracker(guildId: string): void {
   const state = trackers.get(guildId);
