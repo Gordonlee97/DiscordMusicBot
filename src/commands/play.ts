@@ -87,5 +87,6 @@ export async function execute(interaction: ChatInputCommandInteraction, distube:
     member,
     position: undefined,
     interaction,
+    results,
   });
 }

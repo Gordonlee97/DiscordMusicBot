@@ -1,15 +1,13 @@
 import {
   ActionRowBuilder,
-  StringSelectMenuBuilder,
-  StringSelectMenuOptionBuilder,
+  ButtonBuilder,
+  ButtonStyle,
   ChatInputCommandInteraction,
   GuildMember,
   TextChannel,
   VoiceBasedChannel,
-  MessageFlags,
 } from 'discord.js';
 import type { SearchResult } from '../plugins/YtDlpSearchPlugin';
-import { formatDuration } from './formatters';
 
 export interface PendingSearch {
   voiceChannel: VoiceBasedChannel;
@@ -18,6 +16,7 @@ export interface PendingSearch {
   position?: number;       // undefined = add to end, 1 = playnext
   timeout: ReturnType<typeof setTimeout>;
   interaction: ChatInputCommandInteraction;
+  results: SearchResult[];
 }
 
 // Keyed by interactionId — unique per command invocation, so multiple
@@ -37,24 +36,21 @@ export function isUrl(str: string): boolean {
   }
 }
 
-/** Builds the Discord ActionRow containing the search result select menu. */
+/**
+ * Builds a row of numbered buttons (1–N) for each search result.
+ * customId format: search:${interactionId}:${index}
+ */
 export function createComponents(
   results: SearchResult[],
   interactionId: string,
-): ActionRowBuilder<StringSelectMenuBuilder> {
-  const options = results.map(r =>
-    new StringSelectMenuOptionBuilder()
-      .setLabel(r.title.slice(0, 100))
-      .setDescription(`${r.uploader} • ${formatDuration(r.duration)}`.slice(0, 100))
-      .setValue(r.url),
+): ActionRowBuilder<ButtonBuilder> {
+  const buttons = results.map((_, i) =>
+    new ButtonBuilder()
+      .setCustomId(`search:${interactionId}:${i}`)
+      .setLabel(String(i + 1))
+      .setStyle(ButtonStyle.Primary),
   );
-
-  const menu = new StringSelectMenuBuilder()
-    .setCustomId(`search:${interactionId}`)
-    .setPlaceholder('Choose a song...')
-    .addOptions(options);
-
-  return new ActionRowBuilder<StringSelectMenuBuilder>().addComponents(menu);
+  return new ActionRowBuilder<ButtonBuilder>().addComponents(...buttons);
 }
 
 /** Registers a pending search keyed by the originating interaction ID. */
@@ -75,7 +71,7 @@ export function resolvePending(interactionId: string): PendingSearch | undefined
   return entry;
 }
 
-/** Called when the 30-second timeout fires — edits the reply to show expiry message. */
+/** Called when the 2-minute timeout fires — edits the reply to show expiry message. */
 async function expirePending(interactionId: string, interaction: ChatInputCommandInteraction): Promise<void> {
   pending.delete(interactionId);
   try {
