@@ -53,15 +53,6 @@ export async function execute(interaction: Interaction): Promise<void> {
       return;
     }
 
-    if (action === 'stop') {
-      queue.pause();
-      await interaction.update({
-        embeds: [embeds.nowPlayingCommand(queue.songs[0], queue.currentTime, queue.repeatMode)],
-        components: [createPlayerButtons(queue)],
-      });
-      return;
-    }
-
     return;
   }
 

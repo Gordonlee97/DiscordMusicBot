@@ -149,8 +149,8 @@ export const embeds = {
   stopped(): EmbedBuilder {
     return new EmbedBuilder()
       .setColor(COLOR)
-      .setAuthor({ name: '⏹  Playback Stopped' })
-      .setDescription('Queue is intact. Use `/resume` to continue or `/play` to add more.');
+      .setAuthor({ name: '⏹  Stopped' })
+      .setDescription('Current song removed. Use `/resume` to play the next track.');
   },
 
   /** Used by /skip command */

@@ -4,7 +4,7 @@ import { embeds } from '../utils/embeds';
 
 export const data = new SlashCommandBuilder()
   .setName('stop')
-  .setDescription('Stop playback — queue is kept intact');
+  .setDescription('Remove the current song and stop — next song will be ready to play');
 
 export async function execute(interaction: ChatInputCommandInteraction, distube: DisTube): Promise<void> {
   const queue = distube.getQueue(interaction.guildId!);
@@ -13,14 +13,16 @@ export async function execute(interaction: ChatInputCommandInteraction, distube:
     return;
   }
 
-  if (queue.paused) {
-    await interaction.reply({ embeds: [embeds.stopped()] });
-    return;
-  }
-
   try {
-    queue.pause();
-    await interaction.reply({ embeds: [embeds.stopped()] });
+    if (queue.songs.length > 1) {
+      // Skip removes the current song; playSong fires for the next one, then we pause it.
+      await queue.skip();
+      queue.pause();
+    } else {
+      // Last song — nothing left to preserve, just leave voice.
+      queue.voice.leave();
+    }
+    await interaction.reply({ embeds: [embeds.stopped()], flags: MessageFlags.Ephemeral });
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Could not stop.';
     await interaction.reply({ embeds: [embeds.error(message)], flags: MessageFlags.Ephemeral });

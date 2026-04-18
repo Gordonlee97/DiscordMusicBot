@@ -29,10 +29,5 @@ export function createPlayerButtons(queue: Queue, pausedOverride?: boolean): Act
       .setLabel('Loop')
       .setEmoji(LOOP_EMOJI[queue.repeatMode] ?? '➡️')
       .setStyle(loopActive ? ButtonStyle.Success : ButtonStyle.Secondary),
-    new ButtonBuilder()
-      .setCustomId('player:stop')
-      .setLabel('Stop')
-      .setEmoji('⏹️')
-      .setStyle(ButtonStyle.Danger),
   );
 }
