@@ -124,16 +124,16 @@ export const embeds = {
 
   /** Used by /nowplaying command and live tracker — includes progress bar and optional repeat mode indicator */
   nowPlayingCommand(song: Song, currentTime: number, repeatMode = 0): EmbedBuilder {
-    const bar = progressBar(currentTime, song.duration ?? 0);
-    const timeLabel = `${formatDuration(currentTime)} / ${song.formattedDuration ?? '—'}`;
-    const loopLine = repeatMode === 1 ? '\n🔂 Looping song' : repeatMode === 2 ? '\n🔁 Looping queue' : '';
+    const bar = progressBar(currentTime, song.duration ?? 0, 28);
+    const loopLine = repeatMode === 1 ? '  🔂 Looping song' : repeatMode === 2 ? '  🔁 Looping queue' : '';
+    const timeLabel = `**${formatDuration(currentTime)}** / ${song.formattedDuration ?? '—'}${loopLine}`;
     return new EmbedBuilder()
       .setColor(COLOR)
       .setAuthor({ name: '▶  Now Playing' })
       .setTitle(song.name ?? 'Unknown')
       .setURL(song.url ?? null)
       .setThumbnail(song.thumbnail ?? null)
-      .setDescription(`${bar}\n\`${timeLabel}\`${loopLine}`)
+      .setDescription(`${bar}\n${timeLabel}`)
       .addFields({ name: 'Requested by', value: requesterName(song), inline: true });
   },
 
