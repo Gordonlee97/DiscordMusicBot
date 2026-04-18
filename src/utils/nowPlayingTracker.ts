@@ -8,26 +8,26 @@ interface TrackerState {
   message: Message;
 }
 
-// Keyed by guild ID — one live tracker per guild.
+// Active interval tracker — cleared on every song change or disconnect.
 const trackers = new Map<string, TrackerState>();
+
+// Last sent now-playing message — persists across tracker stops so that song
+// loops (which fire finish → playSong in sequence) can reuse the message.
+// Only cleared on true voice disconnect or channel leave.
+const lastMessages = new Map<string, Message>();
 
 const UPDATE_INTERVAL_MS = 5000;
 
-/**
- * Starts a live-updating now-playing embed for the given guild.
- * Replaces any existing tracker for that guild.
- */
 export function startTracker(guildId: string, message: Message, queue: Queue, song: Song): void {
   stopTracker(guildId);
+  lastMessages.set(guildId, message);
 
   const interval = setInterval(async () => {
-    // Stop if the song changed or queue is gone
     if (!queue.songs[0] || queue.songs[0] !== song) {
       stopTracker(guildId);
       return;
     }
 
-    // Skip update while paused — time isn't advancing, keep interval alive
     if (queue.paused) return;
 
     try {
@@ -36,7 +36,6 @@ export function startTracker(guildId: string, message: Message, queue: Queue, so
         components: [createPlayerButtons(queue)],
       });
     } catch {
-      // Message was deleted or bot lost permissions — stop tracking
       stopTracker(guildId);
     }
   }, UPDATE_INTERVAL_MS);
@@ -44,16 +43,22 @@ export function startTracker(guildId: string, message: Message, queue: Queue, so
   trackers.set(guildId, { interval, message });
 }
 
-/** Returns the tracked message for a guild, if one exists. */
-export function getTrackerMessage(guildId: string): TrackerState['message'] | undefined {
-  return trackers.get(guildId)?.message;
+/** Returns the last now-playing message for a guild, even if the tracker has stopped. */
+export function getLastMessage(guildId: string): Message | undefined {
+  return lastMessages.get(guildId);
 }
 
-/** Stops the live tracker for a guild, if one is running. */
+/** Stops the interval tracker but preserves the last message reference. */
 export function stopTracker(guildId: string): void {
   const state = trackers.get(guildId);
   if (state) {
     clearInterval(state.interval);
     trackers.delete(guildId);
   }
+}
+
+/** Full teardown — stops tracker and clears the last message reference. */
+export function clearTracker(guildId: string): void {
+  stopTracker(guildId);
+  lastMessages.delete(guildId);
 }

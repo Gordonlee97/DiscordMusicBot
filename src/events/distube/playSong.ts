@@ -1,6 +1,6 @@
 import type { Queue, Song } from 'distube';
 import { embeds } from '../../utils/embeds';
-import { startTracker, getTrackerMessage } from '../../utils/nowPlayingTracker';
+import { startTracker, getLastMessage } from '../../utils/nowPlayingTracker';
 import { createPlayerButtons } from '../../utils/playerButtons';
 
 export const name = 'playSong';
@@ -8,7 +8,8 @@ export const name = 'playSong';
 export async function execute(queue: Queue, song: Song): Promise<void> {
   // When looping a single song, reuse the existing now-playing message instead of
   // sending a new one each loop — avoids flooding the channel with duplicate embeds.
-  const existingMessage = queue.repeatMode === 1 ? getTrackerMessage(queue.id) : undefined;
+  // getLastMessage survives finish → playSong sequences that happen during song loops
+  const existingMessage = queue.repeatMode === 1 ? getLastMessage(queue.id) : undefined;
   if (existingMessage) {
     await existingMessage.edit({
       embeds: [embeds.nowPlayingCommand(song, 0, queue.repeatMode)],

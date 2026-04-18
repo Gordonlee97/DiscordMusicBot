@@ -1,8 +1,8 @@
 import type { Queue } from 'distube';
-import { stopTracker } from '../../utils/nowPlayingTracker';
+import { clearTracker } from '../../utils/nowPlayingTracker';
 
 export const name = 'disconnect';
 
 export function execute(queue: Queue): void {
-  stopTracker(queue.id);
+  clearTracker(queue.id);
 }
