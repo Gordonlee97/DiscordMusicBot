@@ -43,6 +43,16 @@ export async function execute(interaction: Interaction): Promise<void> {
       return;
     }
 
+    if (action === 'loop') {
+      const next = ((queue.repeatMode + 1) % 3) as 0 | 1 | 2;
+      queue.setRepeatMode(next);
+      await interaction.update({
+        embeds: [embeds.nowPlayingCommand(queue.songs[0], queue.currentTime, next)],
+        components: [createPlayerButtons(queue)],
+      });
+      return;
+    }
+
     if (action === 'stop') {
       queue.pause();
       await interaction.update({
