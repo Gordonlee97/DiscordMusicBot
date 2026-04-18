@@ -5,8 +5,8 @@ import type { Queue } from 'distube';
  * Builds the playback control button row for the now-playing embed.
  * Pause/Resume toggles based on queue state; Skip is disabled when nothing is queued next.
  */
-export function createPlayerButtons(queue: Queue): ActionRowBuilder<ButtonBuilder> {
-  const paused = queue.paused;
+export function createPlayerButtons(queue: Queue, pausedOverride?: boolean): ActionRowBuilder<ButtonBuilder> {
+  const paused = pausedOverride ?? queue.paused;
   const hasNext = queue.songs.length > 1;
 
   return new ActionRowBuilder<ButtonBuilder>().addComponents(

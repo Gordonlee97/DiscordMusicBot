@@ -18,14 +18,17 @@ export async function execute(interaction: Interaction): Promise<void> {
     const action = interaction.customId.slice('player:'.length);
 
     if (action === 'pause') {
-      if (queue.paused) {
+      // Capture state BEFORE acting — DisTube may not update queue.paused synchronously,
+      // so reading it after the call produces inverted button labels.
+      const wasPaused = queue.paused;
+      if (wasPaused) {
         queue.resume();
       } else {
         queue.pause();
       }
       await interaction.update({
         embeds: [embeds.nowPlayingCommand(queue.songs[0], queue.currentTime, queue.repeatMode)],
-        components: [createPlayerButtons(queue)],
+        components: [createPlayerButtons(queue, !wasPaused)],
       });
       return;
     }
