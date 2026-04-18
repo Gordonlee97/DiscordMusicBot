@@ -10,6 +10,7 @@ import type { DisTube } from 'distube';
 import { embeds } from '../utils/embeds';
 import { isUrl, createComponents, registerPending } from '../utils/searchPicker';
 import { YtDlpSearchPlugin } from '../plugins/YtDlpSearchPlugin';
+import { formatDuration } from '../utils/formatters';
 
 export const data = new SlashCommandBuilder()
   .setName('play')
@@ -66,14 +67,14 @@ export async function execute(interaction: ChatInputCommandInteraction, distube:
   }
 
   const resultList = results
-    .map((r, i) => `**${i + 1}.** ${r.title} — \`${r.uploader}\``)
-    .join('\n');
+    .map((r, i) => `**${i + 1}.** ${r.title}\n— ${r.uploader} · ${r.duration ? formatDuration(r.duration) : '—'}`)
+    .join('\n\n');
 
   const searchEmbed = new EmbedBuilder()
     .setColor(0xff0000)
     .setAuthor({ name: '🔍  Search Results' })
     .setDescription(resultList)
-    .setFooter({ text: 'Selection expires in 30 seconds' });
+    .setFooter({ text: 'Selection expires in 2 minutes' });
 
   await interaction.editReply({
     embeds: [searchEmbed],

@@ -24,7 +24,7 @@ export interface PendingSearch {
 // concurrent pickers from the same user never overwrite each other.
 const pending = new Map<string, PendingSearch>();
 
-const SEARCH_TIMEOUT_MS = 30_000;
+const SEARCH_TIMEOUT_MS = 120_000; // 2 minutes
 
 /** Returns true if the string is a playable URL (https/http, no spaces). */
 export function isUrl(str: string): boolean {
