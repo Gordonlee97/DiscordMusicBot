@@ -88,7 +88,7 @@ export const embeds = {
         const rawName = s.name ?? 'Unknown';
         const name = rawName.length > NAME_MAX ? rawName.slice(0, NAME_MAX) + '…' : rawName;
         const url = s.url ?? '';
-        const line = `**${i + 1}.** [${name}](${url}) \`${s.formattedDuration ?? '—'}\``;
+        const line = `**${i + 1}.** [${name}](${url}) — ${s.formattedDuration ?? '—'}`;
         lines.push(line);
       }
 
